@@ -190,7 +190,10 @@ function animate() {
     c.clearRect(0, 0, canvas.width, canvas.height);
 
     platforms.forEach(platform => {
-        platform.draw();
+        // Omly draw platform if it's inside visible window || Frustrum Culling to save GPU from rendering objects that player cannot see
+        if (platform.position.x + platform.width > 0 && platform.position.x < canvas.width) {
+            platform.draw();
+        }
     });
 
     player.update();

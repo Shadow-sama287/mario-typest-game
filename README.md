@@ -322,6 +322,114 @@ To prevent repeated spamming, add a boolean like `canDash` and reset it after a 
 
 ---
 
+## Adding Global Scroll Offset
+
+This feature shifts from moving platforms to moving the camera, creating a true "world" coordinate system. Platforms stay at fixed positions (e.g., x=5000), and we scroll the view to show different parts of the level.
+
+### How It Works
+
+- Add a `scrollOffset` variable to track camera position.
+- Platforms draw at `position.x - scrollOffset` to appear in the correct screen position.
+- Player movement triggers scrolling when hitting screen boundaries.
+- Collision detection uses adjusted coordinates for accurate hitboxes.
+
+### Step 1: Define the Global Offset
+
+At the top of `canvas.js`, near your `keys` or `GRAVITY` constant, add:
+
+```javascript
+let scrollOffset = 0;
+```
+
+### Step 2: Update the Platform Class
+
+Create a Platform class (if you don't have one) and modify its `draw` method:
+
+```javascript
+class Platform {
+  constructor({ x, y }) {
+    this.position = { x, y };
+    this.width = 200;
+    this.height = 20;
+  }
+
+  draw() {
+    c.fillStyle = "red";
+    // Subtract scrollOffset to position relative to camera
+    c.fillRect(
+      this.position.x - scrollOffset,
+      this.position.y,
+      this.width,
+      this.height,
+    );
+  }
+}
+```
+
+### Step 3: Update the Animation Loop
+
+In your `animate()` function, replace platform movement with camera scrolling:
+
+```javascript
+function animate() {
+  requestAnimationFrame(animate);
+  c.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw platforms (they handle offset internally)
+  platforms.forEach((platform) => platform.draw());
+
+  player.update();
+
+  // Camera/Scroll Logic
+  if (keys.right.pressed && player.position.x < canvas.width / 2) {
+    player.velocity.x = ACCELERATION;
+  } else if (keys.left.pressed && player.position.x > 100) {
+    player.velocity.x = -ACCELERATION;
+  } else {
+    player.velocity.x = 0;
+
+    if (keys.right.pressed) {
+      scrollOffset += ACCELERATION; // Scroll camera right
+    } else if (keys.left.pressed && scrollOffset > 0) {
+      scrollOffset -= ACCELERATION; // Scroll camera left (prevent negative)
+    }
+  }
+
+  // Collision Logic (adjust for scroll)
+  platforms.forEach((platform) => {
+    const platformCanvasX = platform.position.x - scrollOffset;
+
+    if (
+      player.position.y + player.radius <= platform.position.y &&
+      player.position.y + player.radius + player.velocity.y >=
+        platform.position.y &&
+      player.position.x + player.radius >= platformCanvasX &&
+      player.position.x - player.radius <= platformCanvasX + platform.width
+    ) {
+      player.velocity.y = 0;
+    }
+  });
+
+  // Win Condition
+  if (scrollOffset > 5000) {
+    console.log("You reached the end of the level!");
+  }
+}
+```
+
+### Why This Is Professional
+
+- **Level Integrity:** Platforms never change position — restart by setting `scrollOffset = 0`.
+- **Parallax Ready:** Easy to add background layers with `x - (scrollOffset * 0.5)`.
+- **Performance:** No constant object updates; just math during draw calls.
+- **Collision Accuracy:** Use `platformCanvasX` to match visual positions.
+
+### Important Note
+
+In collision detection, always calculate `platformCanvasX = platform.position.x - scrollOffset` so hitboxes align with visuals.
+
+---
+
 ## Optional Tweaks
 
 ### Adjust Jump Strength
@@ -376,33 +484,11 @@ this.velocity.x = 2; // Right movement
 Once you have the basics working, try adding:
 
 - ✅ Double/Triple Jump (see above)
-  <!-- - 🎨 Change player appearance (square, image, or sprite) -->
-  <!-- - 🎯 Add platforms at different heights -->
-  <!-- - 🌍 Add enemy collision -->
-  <!-- - 🎮 Add score/lives system -->
-  <!-- - 🔊 Add sound effects -->
-
----
-
-## Learning Resources
-
-- [MDN Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
-- [JavaScript Event Handling](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)
-- [Game Physics Basics](https://gamedev.stackexchange.com/questions/1089/when-should-i-use-fixed-or-variable-time-steps)
-
----
-
-## License
-
-This project is open source and available for educational purposes. Feel free to fork, modify, and build upon it!
-
-**Parameters:**
-
-- `x1` (number) - X coordinate of first point
-- `y1` (number) - Y coordinate of first point
-- `x2` (number) - X coordinate of second point
-- `y2` (number) - Y coordinate of second point
-
-**Returns:** Distance between the two points (number)
+- ✅ Dash with Double-Tap (see above)
+- ✅ Global Scroll Offset (see above)
+<!-- - 🎨 Change player appearance (square, image, or sprite)
+- 🌍 Add enemy collision
+- 🎮 Add score/lives system
+- 🔊 Add sound effects -->
 
 ---
