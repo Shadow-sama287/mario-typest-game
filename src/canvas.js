@@ -4,6 +4,15 @@
 const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 
+const tileStart = new Image();
+tileStart.src = '../assets/platform/Tile_97.png'; // The left "cap"
+
+const tileMiddle = new Image();
+tileMiddle.src = '../assets/platform/Tile_96.png'; // The repeating middle
+
+const tileEnd = new Image();
+tileEnd.src = '../assets/platform/Tile_95.png';   // The right "cap"
+
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
@@ -97,14 +106,39 @@ addEventListener('keyup', ({ keyCode }) => {
 })
 
 class Platform {
-    constructor({ x, y }) {
+    constructor({ x, y, width }) {
         this.position = { x, y };
-        this.width = 200;
-        this.height = 10;
+        this.width = width;
+        this.height = 32;
+        this.tileSize = 32;
 
         this.draw = () => {
-            c.fillStyle = 'red';
-            c.fillRect(this.position.x, this.position.y, this.width, this.height);
+            const renderX = this.position.x;
+
+            // Calculate how many tiles we need to fill the width
+            const totalTiles = Math.ceil(this.width / this.tileSize);
+
+            for (let i = 0; i < totalTiles; i++) {
+                let currentImage;
+
+                // Logic to pick the right "piece" of the platform
+                if (i === 0) {
+                    currentImage = tileStart;
+                } else if (i === totalTiles - 1) {
+                    currentImage = tileEnd;
+                } else {
+                    currentImage = tileMiddle;
+                }
+
+                // Draw the selected tile at the calculated position
+                c.drawImage(
+                    currentImage,
+                    renderX + (i * this.tileSize), // Each tile shifts by 32px
+                    this.position.y,
+                    this.tileSize,
+                    this.height
+                );
+            }
         }
     }
 }
@@ -175,10 +209,11 @@ class Player {
 let player = new Player(200, canvas.height / 2, 20, 'blue');
 
 const platforms = [
-    new Platform({ x: 200, y: 400 }),
-    new Platform({ x: 500, y: 300 }),
-    new Platform({ x: 800, y: 200 }),
-    new Platform({ x: 1100, y: 400 })
+    new Platform({ x: 200, y: 400, width: 64 }),
+    new Platform({ x: 500, y: 300, width: 96 }),
+    new Platform({ x: 800, y: 200, width: 150 }),
+    new Platform({ x: 1100, y: 400, width: 128 }),
+    new Platform({ x: 1400, y: 500, width: 128 }),
 ];
 
 function init() {
