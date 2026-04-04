@@ -142,15 +142,19 @@ class Player {
         }
 
         this.update = () => {
+            // horizontal movement
             this.position.x += this.velocity.x;
+            // verticle movement
             this.position.y += this.velocity.y;
             this.velocity.y += GRAVITY;
 
+            // After Jump: checks so that player does not stagger below ground
             if (this.position.y + this.radius > canvas.height) {
                 this.position.y = canvas.height - this.radius;
                 this.velocity.y = 0;
             }
 
+            // Horizontal Movement checks
             this.velocity.x = 0;
             if (keys.right.pressed) {
                 player.velocity.x += ACCELERATION;
@@ -173,7 +177,7 @@ class Player {
     }
 }
 
-let player = new Player(canvas.width / 2, canvas.height / 2, 20, 'blue');
+let player = new Player(200, canvas.height / 2, 20, 'blue');
 let platform = new Platform();
 
 function init() {
@@ -184,14 +188,31 @@ function animate() {
     requestAnimationFrame(animate);
     c.clearRect(0, 0, canvas.width, canvas.height);
 
-
     platform.draw();
     player.update();
 
-    if (player.position.y + player.radius + player.velocity.y > platform.position.y
-        && player.position.y + player.radius <= platform.position.y
-        && player.position.x - player.radius <= platform.position.x + platform.width
-        && player.position.x + player.radius >= platform.position.x) {
+    // Scroll 
+
+    if (keys.right.pressed && player.position.x < canvas.width / 2 - 75) {
+        // allow player movement
+    } else if (keys.left.pressed && player.position.x > 100) {
+        // allow player movement
+    } else {
+        player.velocity.x = 0
+
+        if (keys.right.pressed) {
+            platform.position.x -= ACCELERATION;
+        } else if (keys.left.pressed) {
+            platform.position.x += ACCELERATION;
+        }
+    }
+
+    // Platform collision detection
+    if (player.position.y + player.radius + player.velocity.y > platform.position.y //above the platform
+        && player.position.y + player.radius <= platform.position.y //below the platform
+        && player.position.x - player.radius <= platform.position.x + platform.width //right edge of the platform
+        && player.position.x + player.radius >= platform.position.x //left edge of the platform
+    ) {
         player.velocity.y = 0
     }
 
