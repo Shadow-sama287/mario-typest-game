@@ -24,37 +24,128 @@ addEventListener('mousemove', (event) => {
     mouse.y = event.clientY;
 })
 
-class Circle {
+var keys = {
+    left: {
+        pressed: false,
+    },
+    right: {
+        pressed: false,
+    }
+}
+
+addEventListener('keydown', ({ keyCode }) => {
+    console.log(keyCode);
+
+    switch (keyCode) {
+        case 87:
+        case 38:
+            console.log("W", "w", 87);
+            // Only jump if the player is touching the bottom of the screen
+            if (player.position.y + player.radius >= canvas.height) {
+                player.velocity.y = -20;
+            }
+            // player.velocity.y -= 20;
+            break;
+
+        case 65:
+        case 37:
+            console.log("A", "a", 65);
+            keys.left.pressed = true;
+            break;
+
+        case 83:
+        case 40:
+            console.log("S", "s", 83);
+            // player.velocity.y += 10;
+            break;
+
+        case 68:
+        case 39:
+            console.log("D", "d", 68);
+            keys.right.pressed = true;
+            break;
+    }
+})
+
+addEventListener('keyup', ({ keyCode }) => {
+    console.log(keyCode);
+
+    switch (keyCode) {
+        case 87:
+        case 38:
+            console.log("W", "w", 87);
+            // player.velocity.y -= 20; //FUN-mod: double jump
+            break;
+
+        case 65:
+        case 37:
+            console.log("A", "a", 65);
+            keys.left.pressed = false;
+            break;
+
+        case 83:
+        case 40:
+            console.log("S", "s", 83);
+            break;
+
+        case 68:
+        case 39:
+            console.log("D", "d", 68);
+            keys.right.pressed = false;
+            break;
+    }
+})
+
+const GRAVITY = 1.8;
+class Player {
     constructor(x, y, radius, color) {
-        this.x = x;
-        this.y = y;
+        this.position = {
+            x: x,
+            y: y,
+        }
         this.radius = radius;
         this.color = color;
+        this.velocity = {
+            x: 0,
+            y: 10,
+        }
 
 
         this.draw = () => {
             c.beginPath();
-            c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false);
             c.fillStyle = this.color;
             c.fill();
             c.closePath();
         }
 
         this.update = () => {
-            //Start here
+            this.position.x += this.velocity.x;
+            this.position.y += this.velocity.y;
+            this.velocity.y += GRAVITY;
+
+            if (this.position.y + this.radius > canvas.height) {
+                this.position.y = canvas.height - this.radius;
+                this.velocity.y = 0;
+            }
+
+            this.velocity.x = 0;
+            if (keys.right.pressed) {
+                player.velocity.x = 5;
+            } else if (keys.left.pressed) {
+                player.velocity.x = -5;
+            } else {
+                player.velocity.x = 0;
+            }
 
             this.draw();
         }
     }
 }
 
-let objects;
-function init() {
-    objects = [];
+let player = new Player(canvas.width / 2, canvas.height / 2, 20, 'blue');
 
-    for (let i = 0; i < 1; i++) {
-        objects.push(new Circle(canvas.width / 2, canvas.height / 2, 5, 'blue'));
-    }
+function init() {
 
 }
 
@@ -62,9 +153,7 @@ function animate() {
     requestAnimationFrame(animate);
     c.clearRect(0, 0, canvas.width, canvas.height);
 
-    objects.forEach(object => {
-        object.update();
-    });
+    player.update();
 
     c.fillText('dattebayo', mouse.x, mouse.y)
 }

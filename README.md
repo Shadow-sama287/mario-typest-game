@@ -1,54 +1,298 @@
-# Canvas Template
+# Mario Platform Game
 
-A lightweight, reusable template for creating HTML5 Canvas animations and interactive graphics. This project provides utility functions and a boilerplate structure to kickstart your canvas projects.
+A simple 2D platformer game built with HTML5 Canvas and vanilla JavaScript. This project demonstrates core game development concepts including physics, gravity, collision detection, and keyboard input handling.
 
-## Utilities
+## Overview
 
-### Available Functions in `utils.js`
+This is a beginner-friendly platformer where you control a player character (currently a blue circle) that can move left/right and jump. The game features gravity, which pulls the player down, and collision detection with the ground.
 
-#### `randomIntFromRange(min, max)`
-Generates a random integer between min and max (inclusive).
+**Perfect for learning:**
 
-**Usage:**
-```javascript
-const randomNum = randomIntFromRange(1, 100);
-// Returns a random number between 1 and 100
-```
-
-**Parameters:**
-- `min` (number) - Minimum value
-- `max` (number) - Maximum value
-
-**Returns:** Random integer between min and max
+- Canvas rendering
+- Game physics (velocity, acceleration, gravity)
+- Event handling (keyboard input)
+- Game loop and animation
+- Collision detection
 
 ---
 
-#### `randomColor(colors)`
-Selects a random color from the provided color array.
+## Getting Started
 
-**Usage:**
-```javascript
-const myColor = randomColor(color1);
-// Returns a random color from the color1 array
-```
+### Prerequisites
 
-**Parameters:**
-- `colors` (array) - Array of color values (hex, rgb, etc.)
+- A modern web browser (Chrome, Firefox, Edge, Safari)
+- A text editor (VS Code, Sublime, etc.)
+- Live Server extension (for VS Code) or any local server
 
-**Returns:** Randomly selected color string
+### Installation & Running
+
+1. **Clone or download** this repository
+2. **Open the project folder** in your editor
+3. **Start Live Server:**
+   - In VS Code: Right-click on `src/index.html` → "Open with Live Server"
+   - Or navigate to `http://localhost:5500/src/index.html` (or your server port)
+4. **The game should load** in your browser
 
 ---
 
-#### `distance(x1, y1, x2, y2)`
-Calculates the distance between two points using the Pythagorean theorem.
+## Game Controls
 
-**Usage:**
-```javascript
-const dist = distance(0, 0, 100, 100);
-// Returns approximately 141.42 (distance between points)
+| Key                      | Action     |
+| ------------------------ | ---------- |
+| **W** or **Up Arrow**    | Jump       |
+| **A** or **Left Arrow**  | Move Left  |
+| **D** or **Right Arrow** | Move Right |
+
+---
+
+## Project Structure
+
+```
+mario-game/
+├── src/
+│   ├── index.html          # Main HTML file
+│   ├── canvas.js           # Game logic and rendering
+│   └── utils/              # (Optional) Utility functions
+├── assets/                 # Images, sounds, etc.
+└── README.md               # This file
 ```
 
+---
+
+## How the Game Works
+
+### The Player
+
+The player is created as a circle with a certain radius. Here's the basic structure in `canvas.js`:
+
+```javascript
+class Player {
+  constructor(x, y, radius, color) {
+    this.position = { x: x, y: y };
+    this.radius = radius;
+    this.velocity = { x: 0, y: 10 };
+    // ... draw() and update() methods
+  }
+}
+```
+
+**Key properties:**
+
+- `position`: X and Y coordinates on the canvas
+- `velocity`: How fast the player moves per frame (in pixels)
+- `radius`: Size of the player circle
+
+### Gravity and Physics
+
+Gravity is applied each frame to make the player fall:
+
+```javascript
+const GRAVITY = 1.8; // Acceleration downward
+
+this.velocity.y += GRAVITY; // Increases falling speed
+this.position.y += this.velocity.y; // Moves player down
+```
+
+### Ground Collision
+
+When the player reaches the bottom of the canvas, they stop:
+
+```javascript
+if (this.position.y + this.radius > canvas.height) {
+  this.position.y = canvas.height - this.radius; // Snap to ground
+  this.velocity.y = 0; // Stop falling
+}
+```
+
+---
+
+## Adding Double or Triple Jump
+
+Want your player to jump mid-air? Follow this guide to add **double jump** (or triple jump) functionality.
+
+### How It Works
+
+Instead of only allowing a jump when the player touches the ground, we track a **jump counter**:
+
+- Give the player a limit (e.g., 2 for double jump, 3 for triple jump)
+- Every jump increments the counter
+- When they touch the ground, reset the counter to 0
+
+This way, the player can jump again before hitting the ground!
+
+### Step 1: Add Jump Properties to Player Class
+
+In `canvas.js`, locate the **Player constructor** (around line 95). Add these two properties after `this.velocity`:
+
+```javascript
+class Player {
+    constructor(x, y, radius, color) {
+        this.position = {
+            x: x,
+            y: y,
+        }
+        this.radius = radius;
+        this.color = color;
+        this.velocity = {
+            x: 0,
+            y: 10,
+        }
+
+        // ADD THESE TWO LINES:
+        this.jumpCount = 0;        // Tracks current jumps
+        this.maxJumps = 2;         // Set to 2 for double jump, 3 for triple jump
+
+        this.draw = () => {
+            // ... existing draw code ...
+        }
+```
+
+### Step 2: Reset Jump Counter on Ground Contact
+
+In the **`update()` method**, locate the ground collision code (around line 118). Modify it to reset the jump counter:
+
+**Find this:**
+
+```javascript
+if (this.position.y + this.radius > canvas.height) {
+  this.position.y = canvas.height - this.radius;
+  this.velocity.y = 0;
+}
+```
+
+**Replace with this:**
+
+```javascript
+if (this.position.y + this.radius > canvas.height) {
+  this.position.y = canvas.height - this.radius;
+  this.velocity.y = 0;
+  this.jumpCount = 0; // RESET the jump counter when touching ground
+}
+```
+
+### Step 3: Update Jump Logic in Keydown Event
+
+In the **`addEventListener('keydown')` section**, locate the jump case (around line 42).
+
+**Find this:**
+
+```javascript
+case 87:
+case 38:
+    console.log("W", "w", 87);
+    // Only jump if the player is touching the bottom of the screen
+    if (player.position.y + player.radius >= canvas.height) {
+        player.velocity.y = -20;
+    }
+    break;
+```
+
+**Replace with this:**
+
+```javascript
+case 87:
+case 38:
+    console.log("W", "w", 87);
+    // Check if the player has jumps remaining
+    if (player.jumpCount < player.maxJumps) {
+        player.velocity.y = -20;      // Apply jump force
+        player.jumpCount++;            // Increment jump counter
+    }
+    break;
+```
+
+### Step 4: Test It!
+
+1. Reload your browser (or Live Server will auto-refresh)
+2. Press **W** or **Up Arrow** in mid-air
+3. You should now jump a second time!
+
+### Customize Jump Count
+
+In the Player constructor (Step 1), change `this.maxJumps`:
+
+- `this.maxJumps = 2;` → Double Jump
+- `this.maxJumps = 3;` → Triple Jump
+- `this.maxJumps = 4;` → Quad Jump!
+
+---
+
+## Optional Tweaks
+
+### Adjust Jump Strength
+
+Higher negative values = more powerful jump:
+
+```javascript
+player.velocity.y = -20; // Change -20 to -30 for higher jumps
+```
+
+### Adjust Gravity
+
+Higher values = faster falling:
+
+```javascript
+const GRAVITY = 1.8; // Change to 2.5 for stronger gravity
+```
+
+### Adjust Movement Speed
+
+Fastest horizontal movement (1-5 is typical):
+
+```javascript
+this.velocity.x = -2; // Left movement
+this.velocity.x = 2; // Right movement
+```
+
+---
+
+## Troubleshooting
+
+### Player Not Appearing?
+
+- Check browser console for errors (F12)
+- Make sure `index.html` is linked to `canvas.js` with `<script type="module" src="canvas.js"></script>`
+
+### Jumping Not Working?
+
+- Ensure the keydown event listener is properly set up
+- Check that `player` is defined before the game starts
+
+### Too Fast/Slow?
+
+- Adjust `GRAVITY` constant
+- Adjust velocity multipliers in movement code
+- Adjust jump force (`velocity.y = -20`)
+
+---
+
+## Next Steps
+
+Once you have the basics working, try adding:
+
+- ✅ Double/Triple Jump (see above)
+  <!-- - 🎨 Change player appearance (square, image, or sprite) -->
+  <!-- - 🎯 Add platforms at different heights -->
+  <!-- - 🌍 Add enemy collision -->
+  <!-- - 🎮 Add score/lives system -->
+  <!-- - 🔊 Add sound effects -->
+
+---
+
+## Learning Resources
+
+- [MDN Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+- [JavaScript Event Handling](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)
+- [Game Physics Basics](https://gamedev.stackexchange.com/questions/1089/when-should-i-use-fixed-or-variable-time-steps)
+
+---
+
+## License
+
+This project is open source and available for educational purposes. Feel free to fork, modify, and build upon it!
+
 **Parameters:**
+
 - `x1` (number) - X coordinate of first point
 - `y1` (number) - Y coordinate of first point
 - `x2` (number) - X coordinate of second point
@@ -57,136 +301,3 @@ const dist = distance(0, 0, 100, 100);
 **Returns:** Distance between the two points (number)
 
 ---
-
-### Available Color Arrays in `colorArrays.js`
-
-#### `color1`
-A soft pastel pink color palette:
-```javascript
-['#fe5d9f', '#f686bd', '#f4bbd3', '#f1e4f3', '#d6d2d2']
-```
-
-## How to Use Utils Functions
-
-### Option 1: ES6 Module Syntax (Recommended)
-
-**Step 1:** Convert `utils.js` to ES6 modules by replacing the CommonJS export:
-
-In `src/utils/utils.js`, change the last line from:
-```javascript
-module.exports = { randomIntFromRange, randomColor, distance }
-```
-
-To:
-```javascript
-export { randomIntFromRange, randomColor, distance }
-```
-
-**Step 2:** Import in your `canvas.js`:
-
-```javascript
-import { randomIntFromRange, randomColor, distance } from './utils/utils.js';
-import { color1 } from './utils/colorArrays.js';
-```
-
-**Step 3:** Update your HTML to use the module script type:
-
-```html
-<script type="module" src="canvas.js"></script>
-```
-
-**Step 4:** Use the functions in your code:
-
-```javascript
-class Circle {
-    constructor(x, y, radius) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-        this.color = randomColor(color1);  // Use the imported function
-    }
-
-    update() {
-        // Calculate distance to mouse for interactive effects
-        const distToMouse = distance(this.x, this.y, mouse.x, mouse.y);
-        if (distToMouse < 200) {
-            // Do something when mouse is nearby
-        }
-        this.draw();
-    }
-}
-
-// In init function:
-function init() {
-    for (let i = 0; i < 100; i++) {
-        const radius = randomIntFromRange(5, 30);
-        const circle = new Circle(
-            randomIntFromRange(radius, canvas.width - radius),
-            randomIntFromRange(radius, canvas.height - radius),
-            radius
-        );
-    }
-}
-```
-
-### Option 2: Webpack Bundler Setup
-
-If you need more complex build setup, see the `gravity/canvas-boilerplate/` folder for a webpack configuration example.
-
-## Getting Started
-
-1. **Clone or copy this template** to start a new canvas project
-2. **Edit `index.html`** - Change the title and meta information
-3. **Edit `canvas.js`** - Build your animation or interactive graphic
-4. **Add colors** - Define your own color arrays in `colorArrays.js` or use the existing ones
-5. **Use utilities** - Leverage the helper functions to reduce boilerplate code
-
-## Live Reload (Optional)
-
-For development, you can use a simple HTTP server:
-
-```bash
-python -m http.server 8000
-# or
-npx http-server
-```
-
-Then open `http://localhost:8000/src/index.html` in your browser.
-
-## Tips & Best Practices
-
-- **Keep it modular** - Add new utility functions to `utils.js` for reusable logic
-- **Organize colors** - Create new color arrays in `colorArrays.js` for different themes
-- **Performance** - Use `requestAnimationFrame()` for smooth animations (already included)
-- **Responsive design** - The resize event listener keeps the canvas full-screen
-
-## Common Use Cases
-
-### Creating a particle effect
-```javascript
-class Particle extends Circle {
-    constructor(x, y, radius, color, velocityX, velocityY) {
-        super(x, y, radius, color);
-        this.vx = velocityX;
-        this.vy = velocityY;
-    }
-    
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.draw();
-    }
-}
-```
-
-### Interactive mouse detection
-```javascript
-function update() {
-    circles.forEach(circle => {
-        const d = distance(circle.x, circle.y, mouse.x, mouse.y);
-        if (d < 100) {
-            circle.color = '#ff0000'; // Highlight on hover
-        }
-    });
-}
-```
