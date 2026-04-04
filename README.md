@@ -217,6 +217,111 @@ In the Player constructor (Step 1), change `this.maxJumps`:
 
 ---
 
+## Adding Dash with Double-Tap
+
+This feature gives the player a short burst of speed when the movement key is pressed twice quickly. It is not just a faster run — it is an instant velocity boost.
+
+### How It Works
+
+- Add a `dashForce` value to the player so a double-tap becomes a strong push.
+- Track `isDashing` so the dash can exceed normal max speed only while the burst is active.
+- Use a small `doubleTapDelay` and `lastKeyTime` to detect the second tap.
+- Apply the dash instantly by setting `player.velocity.x = player.dashForce`.
+
+### Step 1: Add Dash Properties to Player Class
+
+In `canvas.js`, inside the **Player constructor**, add these after your existing movement properties:
+
+```javascript
+this.dashForce = 20; // High value for a strong dash burst
+this.isDashing = false; // Track whether the player is currently dashing
+```
+
+### Step 2: Use Double-Tap Logic in the Keydown Listener
+
+In the `addEventListener('keydown')` block, add a double-tap check for left and right movement keys. Use `lastKey` and `lastKeyTime` to know whether the same key was pressed again quickly.
+
+```javascript
+let lastKey = null;
+let lastKeyTime = 0;
+const doubleTapDelay = 250; // milliseconds
+
+addEventListener("keydown", (event) => {
+  const { keyCode } = event;
+  const currentTime = Date.now();
+
+  // Right dash
+  if (
+    (keyCode === 68 || keyCode === 39) &&
+    currentTime - lastKeyTime < doubleTapDelay &&
+    lastKey === keyCode
+  ) {
+    player.velocity.x = player.dashForce;
+    player.isDashing = true;
+    setTimeout(() => {
+      player.isDashing = false;
+    }, 200);
+  }
+
+  // Left dash
+  if (
+    (keyCode === 65 || keyCode === 37) &&
+    currentTime - lastKeyTime < doubleTapDelay &&
+    lastKey === keyCode
+  ) {
+    player.velocity.x = -player.dashForce;
+    player.isDashing = true;
+    setTimeout(() => {
+      player.isDashing = false;
+    }, 200);
+  }
+
+  lastKey = keyCode;
+  lastKeyTime = currentTime;
+
+  if (keyCode === 65 || keyCode === 37) keys.left.pressed = true;
+  if (keyCode === 68 || keyCode === 39) keys.right.pressed = true;
+});
+```
+
+### Step 3: Keep Normal Speed Limits When Not Dashing
+
+In your Player `update()` method, allow the dash to exceed normal speed only during the dash state.
+
+```javascript
+if (!this.isDashing) {
+  if (this.velocity.x > this.maxSpeed) this.velocity.x = this.maxSpeed;
+  if (this.velocity.x < -this.maxSpeed) this.velocity.x = -this.maxSpeed;
+}
+```
+
+### Step 4: Apply Standard Movement and Friction
+
+Use regular acceleration and friction so the player moves normally when not dashing, and quickly slows down after a dash.
+
+```javascript
+if (keys.right.pressed) {
+  this.velocity.x += this.acceleration;
+} else if (keys.left.pressed) {
+  this.velocity.x -= this.acceleration;
+} else {
+  this.velocity.x *= this.friction; // Slide to a stop
+}
+```
+
+### Why This Is Better
+
+- `velocity.x = dashForce` gives instant burst momentum.
+- `isDashing` allows the burst to bypass regular speed clamps temporarily.
+- Friction causes the player to slow down naturally after the dash.
+- A short dash timer keeps the effect brief and controlled.
+
+### Dash Cooldown Idea
+
+To prevent repeated spamming, add a boolean like `canDash` and reset it after a delay, for example 1 second.
+
+---
+
 ## Optional Tweaks
 
 ### Adjust Jump Strength
