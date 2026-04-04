@@ -68,7 +68,7 @@ export const color8 = [
     '#ff0000',
     '#00ff00',
     '#0000ff'
-]
+];
 
 // the Rainbow
 export const color9 = [
@@ -78,4 +78,41 @@ export const color9 = [
     '#4DE94C',
     '#3783FF',
     '#4815AA'
-]
+];
+
+// the cyberpunk
+export const color10 = [
+    '#00ff9f',
+    '#00b8ff',
+    '#001eff',
+    '#bd00ff',
+    '#d600ff'
+];
+
+// the cyberpunk:edgerunners
+export const color11 = [
+    '#f8e602',
+    '#4bff21',
+    '#00f0ff',
+    '#f4d5fd',
+    '#772289'
+];
+
+// the cyberpunk:neon
+export const color12 = [
+    '#711c91',
+    '#ea00d9',
+    '#0abdc6',
+    '#133e7c',
+    '#091833'
+];
+
+// the cyberpunk:neon::bright
+export const color13 = [
+    '#cc11f0',
+    '#6300ff',
+    '#ff008d',
+    '#d14eea',
+    '#f96363'
+];
+

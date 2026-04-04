@@ -48,8 +48,16 @@ class Circle {
     }
 }
 
+// let objects;
 function init() {
     //idk but maybe i think we put the created objects and shapes
+    // for ex.,
+    // object = [];
+    /*
+    for(let i=0; i=objectsCount; i++) {
+        objects.push(new Circle());
+    }
+    */
 }
 
 function animate() {
