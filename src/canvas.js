@@ -97,19 +97,14 @@ addEventListener('keyup', ({ keyCode }) => {
 })
 
 class Platform {
-    constructor() {
-        this.position = {
-            x: canvas.width / 2 + 100,
-            y: canvas.height / 2 + 200
-        };
+    constructor({ x, y }) {
+        this.position = { x, y };
         this.width = 200;
         this.height = 10;
 
         this.draw = () => {
-            c.beginPath();
             c.fillStyle = 'red';
             c.fillRect(this.position.x, this.position.y, this.width, this.height);
-            c.closePath();
         }
     }
 }
@@ -178,7 +173,13 @@ class Player {
 }
 
 let player = new Player(200, canvas.height / 2, 20, 'blue');
-let platform = new Platform();
+
+const platforms = [
+    new Platform({ x: 200, y: 400 }),
+    new Platform({ x: 500, y: 300 }),
+    new Platform({ x: 800, y: 200 }),
+    new Platform({ x: 1100, y: 400 })
+];
 
 function init() {
 
@@ -188,7 +189,10 @@ function animate() {
     requestAnimationFrame(animate);
     c.clearRect(0, 0, canvas.width, canvas.height);
 
-    platform.draw();
+    platforms.forEach(platform => {
+        platform.draw();
+    });
+
     player.update();
 
     // Scroll 
@@ -201,20 +205,26 @@ function animate() {
         player.velocity.x = 0
 
         if (keys.right.pressed) {
-            platform.position.x -= ACCELERATION;
+            platforms.forEach(platform => {
+                platform.position.x -= ACCELERATION;
+            });
         } else if (keys.left.pressed) {
-            platform.position.x += ACCELERATION;
+            platforms.forEach(platform => {
+                platform.position.x += ACCELERATION;
+            });
         }
     }
 
     // Platform collision detection
-    if (player.position.y + player.radius + player.velocity.y > platform.position.y //above the platform
-        && player.position.y + player.radius <= platform.position.y //below the platform
-        && player.position.x - player.radius <= platform.position.x + platform.width //right edge of the platform
-        && player.position.x + player.radius >= platform.position.x //left edge of the platform
-    ) {
-        player.velocity.y = 0
-    }
+    platforms.forEach(platform => {
+        if (player.position.y + player.radius + player.velocity.y > platform.position.y //above the platform
+            && player.position.y + player.radius <= platform.position.y //below the platform
+            && player.position.x - player.radius <= platform.position.x + platform.width //right edge of the platform
+            && player.position.x + player.radius >= platform.position.x //left edge of the platform
+        ) {
+            player.velocity.y = 0
+        }
+    })
 
     c.fillText('dattebayo', mouse.x, mouse.y)
 }
