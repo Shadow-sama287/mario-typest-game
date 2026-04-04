@@ -48,24 +48,25 @@ class Circle {
     }
 }
 
-// let objects;
+let objects;
 function init() {
-    //idk but maybe i think we put the created objects and shapes
-    // for ex.,
-    // object = [];
-    /*
-    for(let i=0; i=objectsCount; i++) {
-        objects.push(new Circle());
+    objects = [];
+
+    for (let i = 0; i < 1; i++) {
+        objects.push(new Circle(canvas.width / 2, canvas.height / 2, 5, 'blue'));
     }
-    */
+
 }
 
 function animate() {
     requestAnimationFrame(animate);
     c.clearRect(0, 0, canvas.width, canvas.height);
 
+    objects.forEach(object => {
+        object.update();
+    });
+
     c.fillText('dattebayo', mouse.x, mouse.y)
-    //call the object.update() method
 }
 
 init();
