@@ -238,10 +238,13 @@ class Player {
             this.velocity.y += GRAVITY;
 
             // After Jump: checks so that player does not stagger below ground
+            /* 
+            // Remove this for adding the death pit condition.
             if (this.position.y + this.radius > canvas.height) {
-                this.position.y = canvas.height - this.radius;
-                this.velocity.y = 0;
+                // this.position.y = canvas.height - this.radius;
+                // this.velocity.y = 0;
             }
+            */
 
             // Horizontal Movement checks
             this.velocity.x = 0;
@@ -267,27 +270,53 @@ class Player {
     }
 }
 
-let player = new Player(200, canvas.height / 2, 20, 'blue');
+let player;
 
-const platforms = [
-    // --- The Main Ground Section ---
-    new Platform({ x: 0, y: canvas.height - 64, width: 800, height: 128, type: 'ground' }),
-
-    // --- A "Death Pit" Gap (Nothing between x: 800 and x: 1000) ---
-
-    // --- Another Ground Section ---
-    new Platform({ x: 1150, y: canvas.height - 192, width: 600, height: 192, type: 'ground' }),
-    new Platform({ x: 1000, y: canvas.height - 64, width: 1600, height: 64, type: 'ground' }),
-
-    // --- Floating Platforms (Above the pits or ground) ---
-    new Platform({ x: 200, y: 400, width: 96, height: 32, type: 'floating' }),
-    new Platform({ x: 500, y: 300, width: 128, height: 32, type: 'floating' }),
-    new Platform({ x: 850, y: 250, width: 160, height: 32, type: 'floating' }),
-    new Platform({ x: 1200, y: 400, width: 96, height: 32, type: 'floating' }),
-];
+let platforms = [];
 
 function init() {
+    player = new Player(200, canvas.height / 2, 20, 'blue');
 
+    platforms = [
+        // --- The Main Ground Section ---
+        new Platform({ x: 0, y: canvas.height - 64, width: 800, height: 128, type: 'ground' }),
+
+        new Platform({ x: 200, y: 400, width: 96, height: 32, type: 'floating' }),
+        new Platform({ x: 500, y: 300, width: 128, height: 32, type: 'floating' }),
+        new Platform({ x: 850, y: 250, width: 160, height: 32, type: 'floating' }),
+
+        new Platform({ x: 1150, y: canvas.height - 192, width: 600, height: 192, type: 'ground' }),
+        new Platform({ x: 1000, y: canvas.height - 64, width: 1600, height: 64, type: 'ground' }),
+        new Platform({ x: 1200, y: 400, width: 96, height: 32, type: 'floating' }),
+
+        new Platform({ x: 2550, y: 50, width: 96, height: 32, type: 'floating' }),
+        new Platform({ x: 2700, y: 150, width: 96, height: 32, type: 'floating' }),
+        new Platform({ x: 2850, y: 350, width: 32, height: 32, type: 'floating' }),
+        new Platform({ x: 3050, y: 300, width: 64, height: 32, type: 'floating' }),
+        new Platform({ x: 2550, y: 425, width: 96, height: 32, type: 'floating' }),
+        new Platform({ x: 2350, y: 550, width: 64, height: 32, type: 'floating' }),
+
+        new Platform({ x: 3200, y: canvas.height - 64, width: 500, height: 64, type: 'ground' }),
+
+        new Platform({ x: 3925, y: 500, width: 32, height: 32, type: 'floating' }),
+        new Platform({ x: 3900, y: 600, width: 64, height: 32, type: 'floating' }),
+
+
+        new Platform({ x: 4480, y: canvas.height - 512, width: 225, height: 512, type: 'ground' }),
+        new Platform({ x: 4175, y: canvas.height - 384, width: 300, height: 384, type: 'ground' }),
+        new Platform({ x: 4540, y: canvas.height - 288, width: 70, height: 288, type: 'ground' }),
+        new Platform({ x: 4210, y: canvas.height - 224, width: 175, height: 224, type: 'ground' }), // less vidth not move
+        new Platform({ x: 4440, y: canvas.height - 128, width: 100, height: 128, type: 'ground' }), //less vidth and move left
+        new Platform({ x: 4125, y: canvas.height - 64, width: 500, height: 64, type: 'ground' }),
+
+        new Platform({ x: 4900, y: canvas.height - 512, width: 64, height: 32, type: 'floating' }),
+        new Platform({ x: 5100, y: canvas.height - 512, width: 64, height: 32, type: 'floating' }),
+        new Platform({ x: 5300, y: canvas.height - 512, width: 64, height: 32, type: 'floating' }),
+        new Platform({ x: 5550, y: canvas.height - 512, width: 64, height: 32, type: 'floating' }),
+        // new Platform({ x: 5750, y: canvas.height - 628, width: 64, height: 32, type: 'floating' }),
+
+        new Platform({ x: 6164, y: canvas.height - 64, width: 500, height: 64, type: 'ground' }),
+    ];
 }
 
 function animate() {
@@ -295,10 +324,12 @@ function animate() {
     c.clearRect(0, 0, canvas.width, canvas.height);
 
     // Parallax Effect: Moving Background
-    c.drawImage(backgroundImage, 0 - (scrollOffset * 0.5), 0, canvas.width, canvas.height);
-    c.drawImage(backgroundImage, (canvas.width - (scrollOffset * 0.5) % canvas.width), 0, canvas.width, canvas.height); //so that the background image loops forever
-    c.drawImage(backgroundClouds, 0 - (scrollOffset * 0.5), 0, canvas.width, canvas.height);
-    c.drawImage(backgroundClouds, (canvas.width - (scrollOffset * 0.5) % canvas.width), 0, canvas.width, canvas.height);
+    const backgroundScroll = (scrollOffset * 0.5) % canvas.width;  // Calculate the relative scroll for the background
+    c.drawImage(backgroundImage, -backgroundScroll, 0, canvas.width, canvas.height);
+    c.drawImage(backgroundImage, canvas.width - backgroundScroll, 0, canvas.width, canvas.height);
+    const cloudScroll = (scrollOffset * 0.3) % canvas.width;
+    c.drawImage(backgroundClouds, -cloudScroll, 0, canvas.width, canvas.height);
+    c.drawImage(backgroundClouds, canvas.width - cloudScroll, 0, canvas.width, canvas.height);
 
     platforms.forEach(platform => {
         // Omly draw platform if it's inside visible window || Frustrum Culling to save GPU from rendering objects that player cannot see
@@ -340,17 +371,20 @@ function animate() {
         }
     })
 
-    // 4. Win Condition (Super Clean!)
-    if (scrollOffset > 5000) {
+    if (scrollOffset > 6100) {
         console.log("You reached the end of the level!");
     }
 
-    console.log("scrollOff:", scrollOffset);
-    console.log("player position:", player.position.x, player.position.y);
-    console.log("----------__----------");
+    if (player.position.y > canvas.height) {
+        console.log("You lose");
 
+        init();
+    }
 
-    c.fillText('dattebayo', mouse.x, mouse.y)
+    // console.log("scrollOff:", scrollOffset);
+    // console.log("player position:", player.position.x, player.position.y);
+    // console.log("----------__----------");
+    // c.fillText('dattebayo', mouse.x, mouse.y)
 }
 
 init();
