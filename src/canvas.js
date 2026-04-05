@@ -13,7 +13,9 @@ const tileEnd = new Image();
 tileEnd.src = '../assets/floating-platform/Tile_95.png';   // The right "cap"
 
 const backgroundImage = new Image();
-backgroundImage.src = '../assets/background/5.png'; // The Background 
+backgroundImage.src = '../assets/background/1.png'; // The Background 
+const backgroundClouds = new Image();
+backgroundClouds.src = '../assets/background/3.png'; // The Background 
 
 const groundStart = new Image();
 groundStart.src = '../assets/platform/Tile_01.png';
@@ -245,7 +247,8 @@ class Player {
             this.velocity.x = 0;
             if (keys.right.pressed) {
                 player.velocity.x += ACCELERATION;
-            } else if (keys.left.pressed) {
+            } else if (keys.left.pressed && player.position.x > 100
+            ) {
                 player.velocity.x -= ACCELERATION;
             } else {
                 player.velocity.x *= FRICTION;
@@ -273,12 +276,14 @@ const platforms = [
     // --- A "Death Pit" Gap (Nothing between x: 800 and x: 1000) ---
 
     // --- Another Ground Section ---
-    new Platform({ x: 1000, y: canvas.height - 128, width: 600, height: 128, type: 'ground' }),
+    new Platform({ x: 1150, y: canvas.height - 192, width: 600, height: 192, type: 'ground' }),
+    new Platform({ x: 1000, y: canvas.height - 64, width: 1600, height: 64, type: 'ground' }),
 
     // --- Floating Platforms (Above the pits or ground) ---
     new Platform({ x: 200, y: 400, width: 96, height: 32, type: 'floating' }),
     new Platform({ x: 500, y: 300, width: 128, height: 32, type: 'floating' }),
-    new Platform({ x: 850, y: 250, width: 160, height: 32, type: 'floating' }), new Platform({ x: 1200, y: 400, width: 96, height: 32, type: 'floating' }),
+    new Platform({ x: 850, y: 250, width: 160, height: 32, type: 'floating' }),
+    new Platform({ x: 1200, y: 400, width: 96, height: 32, type: 'floating' }),
 ];
 
 function init() {
@@ -292,6 +297,8 @@ function animate() {
     // Parallax Effect: Moving Background
     c.drawImage(backgroundImage, 0 - (scrollOffset * 0.5), 0, canvas.width, canvas.height);
     c.drawImage(backgroundImage, (canvas.width - (scrollOffset * 0.5) % canvas.width), 0, canvas.width, canvas.height); //so that the background image loops forever
+    c.drawImage(backgroundClouds, 0 - (scrollOffset * 0.5), 0, canvas.width, canvas.height);
+    c.drawImage(backgroundClouds, (canvas.width - (scrollOffset * 0.5) % canvas.width), 0, canvas.width, canvas.height);
 
     platforms.forEach(platform => {
         // Omly draw platform if it's inside visible window || Frustrum Culling to save GPU from rendering objects that player cannot see
@@ -305,16 +312,18 @@ function animate() {
 
     // Scroll 
 
-    if (keys.right.pressed && player.position.x < canvas.width / 2 - 75) {
-        // allow player movement
-    } else if (keys.left.pressed && player.position.x > 100) {
-        // allow player movement
-    } else {
-        player.velocity.x = 0
+    // Horizontal Movement & Scrolling Logic
+    if (keys.right.pressed && player.position.x < canvas.width / 2) {
+    }
+    else if (keys.left.pressed && (player.position.x > 150 || (scrollOffset === 0 && player.position.x > 0))) {
+    }
+    else {
+        player.velocity.x = 0;
 
         if (keys.right.pressed) {
             scrollOffset += ACCELERATION;
-        } else if (keys.left.pressed) {
+        } else if (keys.left.pressed && scrollOffset > 0) {
+            // Only scroll left if there is actually world left to see
             scrollOffset -= ACCELERATION;
         }
     }
@@ -338,7 +347,7 @@ function animate() {
 
     console.log("scrollOff:", scrollOffset);
     console.log("player position:", player.position.x, player.position.y);
-    console.log("----------__-------------");
+    console.log("----------__----------");
 
 
     c.fillText('dattebayo', mouse.x, mouse.y)
