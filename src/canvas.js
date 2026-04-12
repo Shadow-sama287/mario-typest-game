@@ -76,7 +76,11 @@ addEventListener('keydown', ({ keyCode }) => {
             // if (player.position.y + player.radius >= canvas.height) {
             //     player.velocity.y = -20;
             // }
-            player.velocity.y -= 20;
+
+            if (player.jumpCount < player.maxJumps) {
+                player.velocity.y -= 20;
+                player.jumpCount++;
+            }
             break;
 
         case 65:
@@ -254,6 +258,8 @@ class Player {
             x: 0,
             y: 10,
         }
+        this.jumpCount = 0;
+        this.maxJumps = 2;
 
 
         this.draw = () => {
@@ -273,13 +279,13 @@ class Player {
             this.velocity.y += GRAVITY;
 
             // After Jump: checks so that player does not stagger below ground
-            /* 
-            // Remove this for adding the death pit condition.
-            if (this.position.y + this.radius > canvas.height) {
-                // this.position.y = canvas.height - this.radius;
-                // this.velocity.y = 0;
-            }
-            */
+
+            // Remove this.velocity.y = 0 for adding the death pit falling condition.
+            // if (this.position.y + this.radius > canvas.height) {
+            // this.position.y = canvas.height - this.radius;
+            // this.velocity.y = 0;
+            // }
+
 
             // Horizontal Movement checks
             this.velocity.x = 0;
@@ -417,6 +423,7 @@ function animate() {
             && player.position.x + player.radius >= platformCanvasX //left edge of the platform
         ) {
             player.velocity.y = 0
+            player.jumpCount = 0
         }
     })
 
