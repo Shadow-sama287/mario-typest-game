@@ -25,6 +25,11 @@ const groundEnd = new Image();
 groundEnd.src = '../assets/platform/Tile_03.png';
 const groundDirt = new Image();
 groundDirt.src = '../assets/platform/Tile_16.png';
+
+const flagIdle = new Image();
+flagIdle.src = '../assets/checkpoint/Checkpoint_Flag_Out1.png';
+const flagReached = new Image();
+flagReached.src = '../assets/checkpoint/Checkpoint_Flag_Idle1.png';
 // --- //
 
 canvas.width = innerWidth;
@@ -137,6 +142,35 @@ class ScenicObject {
     }
 }
 
+let checkpointReached = false;
+class CheckPoint {
+    constructor({ x, y }) {
+        this.position = { x, y };
+        this.width = 48 * 4;
+        this.height = 48 * 4;
+        this.reached = checkpointReached;
+        this.frame = 0;
+        this.gameFrames = 0;
+
+        this.draw = () => {
+            const renderX = this.position.x - scrollOffset;
+            const image = this.reached ? flagReached : flagIdle;
+
+            if (this.gameFrames % 10 === 0) {
+                this.frame = (this.frame + 1) % 7;
+            }
+            this.gameFrames++;
+
+            const spriteWidth = image.width / 7;
+            c.drawImage(
+                image,
+                this.frame * spriteWidth, 0, spriteWidth, image.height,
+                renderX, this.position.y - this.height, this.width, this.height
+            );
+        }
+    }
+}
+
 class Platform {
     constructor({ x, y, width, height, type }) {
         this.position = { x, y };
@@ -223,6 +257,7 @@ class Player {
 
 
         this.draw = () => {
+
             c.beginPath();
             c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false);
             c.fillStyle = this.color;
@@ -271,11 +306,19 @@ class Player {
 }
 
 let player;
-
+let checkpoint;
+let spawnPoint = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    scrollOffset: 0
+};
 let platforms = [];
 
 function init() {
-    player = new Player(200, canvas.height / 2, 20, 'blue');
+    const wasReached = checkpoint ? checkpoint.reached : false;
+    scrollOffset = spawnPoint.scrollOffset !== undefined ? spawnPoint.scrollOffset : Math.max(100, spawnPoint.x - canvas.width / 2);
+    checkpoint = new CheckPoint({ x: 3400, y: canvas.height - 64 });
+    checkpoint.reached = wasReached;
 
     platforms = [
         // --- The Main Ground Section ---
@@ -315,8 +358,12 @@ function init() {
         new Platform({ x: 5550, y: canvas.height - 512, width: 64, height: 32, type: 'floating' }),
         // new Platform({ x: 5750, y: canvas.height - 628, width: 64, height: 32, type: 'floating' }),
 
-        new Platform({ x: 6164, y: canvas.height - 64, width: 500, height: 64, type: 'ground' }),
+        new Platform({ x: 6100, y: canvas.height - 64, width: 500, height: 64, type: 'ground' }), //last platform winning stage
     ];
+
+    checkpoint = new CheckPoint({ x: 3400, y: canvas.height - 64 })
+
+    player = new Player(spawnPoint.x, spawnPoint.y, 20, 'blue');
 }
 
 function animate() {
@@ -338,6 +385,8 @@ function animate() {
             platform.draw();
         }
     });
+
+    checkpoint.draw();
 
     player.update();
 
@@ -371,19 +420,35 @@ function animate() {
         }
     })
 
-    if (scrollOffset > 6100) {
-        console.log("You reached the end of the level!");
+    const checkpointX = checkpoint.position.x - scrollOffset;
+    if (!checkpoint.reached &&
+        player.position.x + player.radius > checkpointX && //player right-edge past checkpoint 
+        player.position.x - player.radius < checkpointX + checkpoint.width && //player left edge before checkpoint right-edge
+        player.position.y + player.radius > checkpoint.position.y - checkpoint.height && //player bottom below checkpoint top
+        player.position.y - player.radius < checkpoint.position.y //player top-edge above checkpoint bottom edge
+    ) {
+        checkpoint.reached = true;
+        spawnPoint = {
+            x: canvas.width / 2,
+            y: checkpoint.position.y - 100,
+            scrollOffset: checkpoint.position.x - canvas.width / 2
+        };
     }
 
-    if (player.position.y > canvas.height) {
-        console.log("You lose");
+    // Win Condition
+    if (scrollOffset > 6000) {
+        console.log("You reached the end of the level!");
+        alert("You won")
+    }
 
+    // Death-Pits condition
+    if (player.position.y > canvas.height) {
         init();
     }
 
-    // console.log("scrollOff:", scrollOffset);
-    // console.log("player position:", player.position.x, player.position.y);
-    // console.log("----------__----------");
+    console.log("scrollOff:", scrollOffset);
+    console.log("player position:", player.position.x, player.position.y);
+    console.log("----------__----------");
     // c.fillText('dattebayo', mouse.x, mouse.y)
 }
 
