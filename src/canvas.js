@@ -314,7 +314,7 @@ class Player {
 let player;
 let checkpoint;
 let spawnPoint = {
-    x: canvas.width / 2,
+    x: canvas.width / 2 - 200,
     y: canvas.height / 2,
     scrollOffset: 0
 };
@@ -323,7 +323,7 @@ let platforms = [];
 function init() {
     const wasReached = checkpoint ? checkpoint.reached : false;
     scrollOffset = spawnPoint.scrollOffset !== undefined ? spawnPoint.scrollOffset : Math.max(100, spawnPoint.x - canvas.width / 2);
-    checkpoint = new CheckPoint({ x: 3400, y: canvas.height - 64 });
+    checkpoint = new CheckPoint({ x: 3370, y: canvas.height - 64 });
     checkpoint.reached = wasReached;
 
     platforms = [
@@ -344,6 +344,8 @@ function init() {
         new Platform({ x: 3050, y: 300, width: 64, height: 32, type: 'floating' }),
         new Platform({ x: 2550, y: 425, width: 96, height: 32, type: 'floating' }),
         new Platform({ x: 2350, y: 550, width: 64, height: 32, type: 'floating' }),
+
+        new Platform({ x: 2750, y: -32, width: 3360, height: 32, type: 'floating' }),
 
         new Platform({ x: 3200, y: canvas.height - 64, width: 500, height: 64, type: 'ground' }),
 
@@ -367,7 +369,6 @@ function init() {
         new Platform({ x: 6100, y: canvas.height - 64, width: 500, height: 64, type: 'ground' }), //last platform winning stage
     ];
 
-    checkpoint = new CheckPoint({ x: 3400, y: canvas.height - 64 })
 
     player = new Player(spawnPoint.x, spawnPoint.y, 20, 'blue');
 }
@@ -445,7 +446,13 @@ function animate() {
     // Win Condition
     if (scrollOffset > 6000) {
         console.log("You reached the end of the level!");
-        alert("You won")
+        alert("You won");
+        spawnPoint = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            scrollOffset: 0
+        };
+        init();
     }
 
     // Death-Pits condition
