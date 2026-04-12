@@ -30,6 +30,21 @@ const flagIdle = new Image();
 flagIdle.src = '../assets/checkpoint/Checkpoint_Flag_Out1.png';
 const flagReached = new Image();
 flagReached.src = '../assets/checkpoint/Checkpoint_Flag_Idle1.png';
+
+const playerIdle = new Image();
+playerIdle.src = '../assets/player/Idle.png';
+
+const playerRun = new Image();
+playerRun.src = '../assets/player/Run.png';
+
+const playerJump = new Image();
+playerJump.src = '../assets/player/Jump.png';
+
+const playerFall = new Image();
+playerFall.src = '../assets/player/Fall.png';
+
+const playerDoubleJump = new Image();
+playerDoubleJump.src = '../assets/player/Double_Jump.png';
 // --- //
 
 canvas.width = innerWidth;
@@ -80,6 +95,9 @@ addEventListener('keydown', ({ keyCode }) => {
             if (player.jumpCount < player.maxJumps) {
                 player.velocity.y -= 20;
                 player.jumpCount++;
+                if (player.jumpCount == 2) {
+                    player.isDoubleJumping = true;
+                }
             }
             break;
 
@@ -245,14 +263,22 @@ const GRAVITY = 1.8;
 const ACCELERATION = 10;
 const FRICTION = 0.9; //0.9 means it keeps 90% of its speed every frame
 
+const FRAME_COUNTS = {
+    idle: 11,
+    run: 12,
+    jump: 1,
+    fall: 1,
+    doubleJump: 6,
+};
+const FRAME_SPEED = 3;
 const maxSpeed = 40;
 class Player {
-    constructor(x, y, radius, color) {
+    constructor(x, y, color) {
         this.position = {
             x: x,
             y: y,
         }
-        this.radius = radius;
+        this.radius = 24;
         this.color = color;
         this.velocity = {
             x: 0,
@@ -261,15 +287,68 @@ class Player {
         this.jumpCount = 0;
         this.maxJumps = 2;
 
+        // sprite state
+        this.currentState = 'idle';
+        this.frameIndex = 0;
+        this.gameFrames = 0;
+        this.facingRight = true;
+        this.isDoubleJumping = false;
+        this.onGround = false;
+        // Display size (scale up the tiny sprite to fit gameplay)
+        this.spriteWidth = 64;
+        this.spriteHeight = 64;
+
+
 
         this.draw = () => {
+            let sheet, totalFrames;
 
-            c.beginPath();
-            c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2, false);
-            c.fillStyle = this.color;
-            c.fill();
-            c.closePath();
-        }
+            if (this.isDoubleJumping) {
+                sheet = playerDoubleJump;
+                totalFrames = FRAME_COUNTS.doubleJump;
+            } else if (this.velocity.y < 0) {
+                sheet = playerJump;
+                totalFrames = FRAME_COUNTS.jump;
+            } else if (!this.onGround && this.velocity > 1) {
+                sheet = playerFall;
+                totalFrames = FRAME_COUNTS.fall;
+            } else if (keys.left.pressed || keys.right.pressed) {
+                sheet = playerRun;
+                totalFrames = FRAME_COUNTS.run;
+            } else {
+                sheet = playerIdle;
+                totalFrames = FRAME_COUNTS.idle;
+            }
+
+            // Advance frame counter
+            if (this.gameFrames % FRAME_SPEED === 0) {
+                this.frameIndex = (this.frameIndex + 1) % totalFrames;
+            }
+            this.gameFrames++;
+
+            const frameWidth = sheet.width / totalFrames;
+
+            // Flip sprite horizontally when facing left
+            c.save();
+            if (!this.facingRight) {
+                c.scale(-1, 1);
+                c.drawImage(
+                    sheet,
+                    this.frameIndex * frameWidth, 0, frameWidth, sheet.height,
+                    -(this.position.x + this.spriteWidth / 2), this.position.y + this.radius - this.spriteHeight,
+                    this.spriteWidth, this.spriteHeight
+                );
+            } else {
+                c.drawImage(
+                    sheet,
+                    this.frameIndex * frameWidth, 0, frameWidth, sheet.height,
+                    this.position.x - this.spriteWidth / 2, this.position.y + this.radius - this.spriteHeight,
+                    this.spriteWidth, this.spriteHeight
+                );
+            }
+            c.restore();
+        };
+
 
         this.update = () => {
             // horizontal movement
@@ -286,6 +365,9 @@ class Player {
             // this.velocity.y = 0;
             // }
 
+            // Track facing direction
+            if (keys.right.pressed) this.facingRight = true;
+            if (keys.left.pressed) this.facingRight = false;
 
             // Horizontal Movement checks
             this.velocity.x = 0;
@@ -370,7 +452,7 @@ function init() {
     ];
 
 
-    player = new Player(spawnPoint.x, spawnPoint.y, 20, 'blue');
+    player = new Player(spawnPoint.x, spawnPoint.y, 'blue');
 }
 
 function animate() {
@@ -392,6 +474,8 @@ function animate() {
             platform.draw();
         }
     });
+
+    player.onGround = false;
 
     checkpoint.draw();
 
@@ -418,13 +502,17 @@ function animate() {
     // Platform collision detection
     platforms.forEach(platform => {
         const platformCanvasX = platform.position.x - scrollOffset;
-        if (player.position.y + player.radius + player.velocity.y > platform.position.y //above the platform
+
+        if (player.velocity.y > 0
+            && player.position.y + player.radius + player.velocity.y > platform.position.y //above the platform
             && player.position.y + player.radius <= platform.position.y //below the platform
             && player.position.x - player.radius <= platformCanvasX + platform.width //right edge of the platform
             && player.position.x + player.radius >= platformCanvasX //left edge of the platform
         ) {
-            player.velocity.y = 0
-            player.jumpCount = 0
+            player.velocity.y = 0;
+            player.jumpCount = 0;
+            player.isDoubleJumping = false;
+            player.onGround = true;
         }
     })
 
@@ -460,9 +548,9 @@ function animate() {
         init();
     }
 
-    console.log("scrollOff:", scrollOffset);
-    console.log("player position:", player.position.x, player.position.y);
-    console.log("----------__----------");
+    // console.log("scrollOff:", scrollOffset);
+    // console.log("player position:", player.position.x, player.position.y);
+    // console.log("----------__----------");
     // c.fillText('dattebayo', mouse.x, mouse.y)
 }
 
